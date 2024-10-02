@@ -4,21 +4,18 @@ from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.templating import Jinja2Templates
 
-from .routers import software_router, chat_router, file_router
+from models import create_tables
 
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
+    await create_tables()
     yield
 
 
 # for no docs add ", docs_url=None, redoc_url=None"
 app = FastAPI(lifespan=lifespan, title="Cekko")
 templates = Jinja2Templates(directory="templates")
-
-app.include_router(software_router)
-app.include_router(chat_router)
-app.include_router(file_router)
 
 
 @app.get("/")
