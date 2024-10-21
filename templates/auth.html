@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if auth == 'login' %} Cekko - Login {% else %} Cekko - Register {% endif %}</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+<div {% if auth == 'login' %} x-data="{ showLogin: true }" {% else %} x-data="{ showLogin: false }" {% endif %}
+                              class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <form x-show="showLogin" id="loginForm" action="/api/user/login?next={{ next_url }}" method="post"
+          class="space-y-4">
+        <h2 class="text-2xl font-bold mb-4">Login</h2>
+        <input type="text" name="username" placeholder="Username" required class="w-full p-2 border rounded">
+        <input type="password" name="password" placeholder="Password" required class="w-full p-2 border rounded">
+        <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Login</button>
+    </form>
+
+    <form x-show="!showLogin" id="registerForm" action="/api/user/register?next={{ next_url }}" method="post"
+          class="space-y-4">
+        <h2 class="text-2xl font-bold mb-4">Register</h2>
+        <input type="text" name="username" placeholder="Username" required class="w-full p-2 border rounded">
+        <input type="email" name="email" placeholder="Email" required class="w-full p-2 border rounded">
+        <input type="password" name="password" placeholder="Password" required class="w-full p-2 border rounded">
+        <button type="submit" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">Register</button>
+    </form>
+
+    <div class="mt-4 text-center">
+        <a href="#"
+           @click.prevent="showLogin = !showLogin"
+           x-text="showLogin ? 'Need an account? Register' : 'Already have an account? Login'"
+           class="text-blue-500 hover:underline"
+           onclick="
+                   if (location.pathname === '/login') {
+                   history.pushState(
+                   {additionalInformation: 'Updated the URL with JS'},
+                   'Cekko - Register',
+                   'http://' + window.location.hostname + '/register?next=' + {{ next_url }})
+                   document.title = 'Cekko - Register';
+                   } else {
+                   history.pushState(
+                   {additionalInformation: 'Updated the URL with JS'},
+                   'Cekko - Login',
+                   'http://' + window.location.hostname + '/login?next=' + {{ next_url }})
+                   document.title = 'Cekko - Login';
+                   }">
+
+        </a>
+    </div>
+</div>
+</body>
+</html>

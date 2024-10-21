@@ -5,10 +5,10 @@ from starlette.templating import Jinja2Templates
 
 from .router import UserRouter, check_login
 
-DataAPI = APIRouter()
+DataAPI = APIRouter(prefix="/api")
 templates = Jinja2Templates(directory="templates")
 
-DataAPI.include_router(UserRouter, prefix="/user", tags=["user"])
+DataAPI.include_router(UserRouter, tags=["user"])
 
 
 async def auth_required(request: Request):

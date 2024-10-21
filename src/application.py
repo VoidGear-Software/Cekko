@@ -1,12 +1,12 @@
 from contextlib import asynccontextmanager
 
-from attr.validators import instance_of
 from fastapi import FastAPI, Depends
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.templating import Jinja2Templates
 
 from .data import DataAPI, create_db_and_tables, auth_required
+from .view import ViewApp
 
 
 @asynccontextmanager
@@ -19,14 +19,18 @@ async def lifespan(application: FastAPI):
 app = FastAPI(lifespan=lifespan, title="Cekko")
 templates = Jinja2Templates(directory="templates")
 
-app.include_router(DataAPI, prefix="/api", tags=["API"])
+app.include_router(DataAPI, tags=["Api"])
+app.include_router(ViewApp, tags=["View"])
 
 
-# TODO: Next -> Startpage, Protected Page & Login / Register Site (everything basic for testing)
+@app.get("/")
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
 
 @app.get("/protected-route")
-async def protected_route(auth: dict = Depends(auth_required)):
-    return {"message": "This is a protected route"}
+async def protected_route(request: Request, auth: dict = Depends(auth_required)):
+    return templates.TemplateResponse("protected.html", {"request": request})
 
 
 @app.exception_handler(401)
