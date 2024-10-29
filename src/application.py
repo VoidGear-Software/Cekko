@@ -26,6 +26,6 @@ app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET"))
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-@app.exception_handler(401)
+@app.exception_handler(400)
 async def unauthorized_exception_handler(request: Request, exc: Exception):
-    return RedirectResponse(url=f"/login?next={request.url.path}", status_code=303)
+    return RedirectResponse(url=f"/login?next=" + request.url.path, status_code=303)

@@ -1,4 +1,7 @@
+from typing import Annotated
+
 from fastapi import Request, Depends, APIRouter
+from fastapi.params import Query
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from starlette.responses import RedirectResponse
@@ -21,19 +24,21 @@ async def index(request: Request, current_user: User = Depends(get_current_user)
 
 
 @ViewApp.get("/login", response_class=HTMLResponse)
-async def view_login(request: Request):
+async def view_login(request: Request, next: Annotated[str, Query] = "/"):
     ctx = {
         "request": request,
-        "show_login": True
+        "show_login": True,
+        "next": next
     }
     return templates.TemplateResponse("auth.html", context=ctx)
 
 
 @ViewApp.get("/register", response_class=HTMLResponse)
-async def view_register(request: Request):
+async def view_register(request: Request, next: Annotated[str, Query] = "/"):
     ctx = {
         "request": request,
-        "show_login": False
+        "show_login": False,
+        "next": next
     }
     return templates.TemplateResponse("auth.html", context=ctx)
 
