@@ -1,19 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from starlette.requests import Request
-from starlette.responses import RedirectResponse
+from fastapi import APIRouter
 from starlette.templating import Jinja2Templates
 
-from .User import UserRouter, check_login
+from .User import UserRouter
 
 DataAPI = APIRouter(prefix="/api")
 templates = Jinja2Templates(directory="templates")
 
 DataAPI.include_router(UserRouter, prefix="/user", tags=["user"])
-
-
-async def auth_required(request: Request):
-    auth_result = await check_login(request)
-    if isinstance(auth_result, RedirectResponse):
-        if auth_result.headers["location"] != request.url.path:
-            raise HTTPException(status_code=401, detail="Unauthorized")
-    return auth_result
