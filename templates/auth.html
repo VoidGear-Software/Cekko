@@ -37,13 +37,13 @@
                    history.pushState(
                    {additionalInformation: 'Updated the URL with JS'},
                    'Cekko - Register',
-                   'http://' + window.location.hostname + '/register?next=' + {{ next_url }})
+                   'http://' + window.location.hostname + '/register?next={{ next_url }}')
                    document.title = 'Cekko - Register';
                    } else {
                    history.pushState(
                    {additionalInformation: 'Updated the URL with JS'},
                    'Cekko - Login',
-                   'http://' + window.location.hostname + '/login?next=' + {{ next_url }})
+                   'http://' + window.location.hostname + '/login?next={{ next_url }}')
                    document.title = 'Cekko - Login';
                    }">
 

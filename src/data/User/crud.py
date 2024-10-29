@@ -3,21 +3,22 @@ import uuid
 from bcrypt import checkpw, hashpw, gensalt
 from sqlalchemy import insert, select, update
 
-from ..models import User, engine
-from ..schemas import UserCreate
+from ..Base import engine
+from .model import User
+from .schema import UserCreate
 
 
-def verify_password(plain_password: str, hashed_password: bytes) -> bool:
-    return checkpw(plain_password.encode("utf8"), hashed_password)
+def verify_password(user: User, password: str) -> bool:
+    return checkpw(password.encode("utf8"), user.hashed_password)
 
 
-def hash_password(password: str):
+def hash_password(password: str) -> bytes:
     return hashpw(password.encode("utf8"), gensalt(12))
 
 
 async def authenticate_user(username: str, password: str):
     user = await get_user_by_username(username)
-    if not user or not verify_password(password, user.hashed_password):
+    if not user or not verify_password(user, password):
         return False
     return user
 
