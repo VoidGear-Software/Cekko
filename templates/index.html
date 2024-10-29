@@ -9,20 +9,26 @@
 <body class="bg-gray-100 flex items-center justify-center h-screen">
 <div class="text-center">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Welcome to My Website</h1>
-    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full mx-2 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110"
-            onclick="window.location.href='/login'">
-        Login
-    </button>
-
-    <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full mx-2 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110"
-            onclick="window.location.href='/register'">
-        Register
-    </button>
-
-    <form action="/api/user/logout" method="POST">
-        <input type="submit" value="Logout">
-    </form>
-
+    <div id="authButtons">
+        {% if user %}
+            <p class="text-green-600 mb-4">Welcome, {{ user.username }}!</p>
+            <form action="{{ url_for('view_logout') }}" method="post">
+                <button type="submit"
+                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full mx-2 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110">
+                    Logout
+                </button>
+            </form>
+        {% else %}
+            <a href="{{ url_for('view_login') }}"
+               class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full mx-2 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110 inline-block">
+                Login
+            </a>
+            <a href="{{ url_for('view_register') }}"
+               class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full mx-2 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110 inline-block">
+                Register
+            </a>
+        {% endif %}
+    </div>
 </div>
 </body>
 </html>

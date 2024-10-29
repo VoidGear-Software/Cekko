@@ -1,2 +1,2 @@
-from .app import DataAPI, auth_required
+from .app import DataAPI
 from .Base import create_db_and_tables

@@ -3,50 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if auth == 'login' %} Cekko - Login {% else %} Cekko - Register {% endif %}</title>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <title>Cekko - {% if show_login %}Login{% else %}Register{% endif %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 h-screen flex items-center justify-center">
-<div {% if auth == 'login' %} x-data="{ showLogin: true }" {% else %} x-data="{ showLogin: false }" {% endif %}
-                              class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-    <form x-show="showLogin" id="loginForm" action="/api/user/login?next={{ next_url }}" method="post"
-          class="space-y-4">
-        <h2 class="text-2xl font-bold mb-4">Login</h2>
-        <input type="text" name="username" placeholder="Username" required class="w-full p-2 border rounded">
-        <input type="password" name="password" placeholder="Password" required class="w-full p-2 border rounded">
-        <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Login</button>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+<div class="bg-white p-10 rounded-lg shadow-xl w-full max-w-md">
+    <h2 class="text-4xl font-bold mb-8 text-center {% if show_login %}text-blue-600{% else %}text-green-600{% endif %}">
+        {% if show_login %}Login{% else %}Register{% endif %}
+    </h2>
+    <form action="{{ url_for('auth_login' if show_login else 'auth_register') }}" method="post" class="space-y-6">
+        <div>
+            <label for="username" class="block text-lg font-medium text-gray-700 mb-2">Username</label>
+            <input type="text" id="username" name="username" required
+                   class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-lg">
+        </div>
+        {% if not show_login %}
+            <div>
+                <label for="email" class="block text-lg font-medium text-gray-700 mb-2">
+                    Email
+                </label>
+                <input type="email" id="email" name="email" required
+                       class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-lg">
+            </div>
+        {% endif %}
+        <div>
+            <label for="password" class="block text-lg font-medium text-gray-700 mb-2">Password</label>
+            <input type="password" id="password" name="password" required
+                   class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-lg">
+        </div>
+        <div>
+            <button type="submit"
+                    class="w-full py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white {% if show_login %}bg-blue-600 hover:bg-blue-700{% else %}bg-green-600 hover:bg-green-700{% endif %} focus:outline-none focus:ring-2 focus:ring-offset-2 {% if show_login %}focus:ring-blue-500{% else %}focus:ring-green-500{% endif %}">
+                {% if show_login %}Login{% else %}Register{% endif %}
+            </button>
+        </div>
     </form>
-
-    <form x-show="!showLogin" id="registerForm" action="/api/user/register?next={{ next_url }}" method="post"
-          class="space-y-4">
-        <h2 class="text-2xl font-bold mb-4">Register</h2>
-        <input type="text" name="username" placeholder="Username" required class="w-full p-2 border rounded">
-        <input type="email" name="email" placeholder="Email" required class="w-full p-2 border rounded">
-        <input type="password" name="password" placeholder="Password" required class="w-full p-2 border rounded">
-        <button type="submit" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">Register</button>
-    </form>
-
-    <div class="mt-4 text-center">
-        <a href="#"
-           @click.prevent="showLogin = !showLogin"
-           x-text="showLogin ? 'Need an account? Register' : 'Already have an account? Login'"
-           class="text-blue-500 hover:underline"
-           onclick="
-                   if (location.pathname === '/login') {
-                   history.pushState(
-                   {additionalInformation: 'Updated the URL with JS'},
-                   'Cekko - Register',
-                   'http://' + window.location.hostname + '/register?next={{ next_url }}')
-                   document.title = 'Cekko - Register';
-                   } else {
-                   history.pushState(
-                   {additionalInformation: 'Updated the URL with JS'},
-                   'Cekko - Login',
-                   'http://' + window.location.hostname + '/login?next={{ next_url }}')
-                   document.title = 'Cekko - Login';
-                   }">
-
+    <div class="mt-8 text-center">
+        <a href="{{ url_for('view_register' if show_login else 'view_login') }}"
+           class="text-lg {% if show_login %}text-green-600 hover:text-green-700{% else %}text-blue-600 hover:text-blue-700{% endif %} font-medium">
+            {% if show_login %}Need an account? Register{% else %}Already have an account? Login{% endif %}
         </a>
     </div>
 </div>
