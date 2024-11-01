@@ -1,10 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Form
+from fastapi import APIRouter, HTTPException, Form, status
 from fastapi.params import Depends, Query
-from starlette import status
-from starlette.requests import Request
-from starlette.responses import RedirectResponse
+from fastapi.requests import Request
+from fastapi.responses import RedirectResponse
 
 from .crud import authenticate_user, create_user
 from .jwt import create_access_token, get_current_user

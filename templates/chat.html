@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WebSocket Example</title>
+</head>
+<body>
+<h1>WebSocket Example</h1>
+<div>
+    <input type="text" id="messageInput" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+</div>
+<div id="output"></div>
+
+<script>
+    let hostname = window.location.hostname
+    let outputDiv = document.getElementById("output");
+    let messageInput = document.getElementById("messageInput");
+
+    const ws = new WebSocket('ws://' + hostname + '/api/chat/ws');
+
+    ws.onopen = () => {
+        console.log('WebSocket opened on browser');
+    }
+
+    ws.onclose = () => {
+        console.log('WebSocket closed');
+    }
+
+    ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+    }
+
+    ws.onmessage = function (event) {
+        outputDiv.innerHTML += `<p> ${event.data} </p>`;
+        console.log(event.data);
+    };
+
+    function sendMessage() {
+        const message = messageInput.value;
+        ws.send(message);
+        messageInput.value = "";
+    }
+</script>
+</body>
+</html>

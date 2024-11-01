@@ -2,9 +2,8 @@ from typing import Annotated
 
 from fastapi import Request, Depends, APIRouter
 from fastapi.params import Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from starlette.responses import RedirectResponse
 
 from ..data.User.jwt import get_current_user
 from ..data.User.schema import User
@@ -20,6 +19,8 @@ async def index(request: Request, current_user: User = Depends(get_current_user)
         "request": request,
         "user": current_user
     }
+    if current_user is None:
+        request.session.clear()
     return templates.TemplateResponse("index.html", context=ctx)
 
 
@@ -47,3 +48,15 @@ async def view_register(request: Request, next: Annotated[str, Query] = "/"):
 async def view_logout(request: Request):
     request.session.clear()
     return RedirectResponse(url="/", status_code=303)
+
+
+@ViewApp.get("/chat")
+async def view_chat(request: Request, current_user: User = Depends(get_current_user)):
+    ctx = {
+        "request": request,
+        "user": current_user
+    }
+    if current_user is None:
+        request.session.clear()
+        return RedirectResponse(url="/", status_code=303)
+    return templates.TemplateResponse("chat.html", context=ctx)
