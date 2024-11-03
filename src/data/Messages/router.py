@@ -2,16 +2,17 @@ from fastapi import APIRouter, WebSocket
 from fastapi.params import Depends
 
 from src.logger import loggerObj
-from ..User.jwt import get_current_user
-from ..User.schema import User
+from src.data.User.jwt import get_current_user
+from src.data.User.schema import User
 
-ChatRouter = APIRouter()
+MessageRouter = APIRouter()
 
 connected_users = {}
 
 
-@ChatRouter.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, current_user: User = Depends(get_current_user)):
+@MessageRouter.websocket("/send_message")
+async def websocket_endpoint(websocket: WebSocket, channel: int, server: int,
+                             current_user: User = Depends(get_current_user)):
     await websocket.accept()
     for user, user_ws in connected_users.items():
         await user_ws.send_text(current_user.username + " joined")

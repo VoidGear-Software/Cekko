@@ -16,7 +16,7 @@
     let outputDiv = document.getElementById("output");
     let messageInput = document.getElementById("messageInput");
 
-    const ws = new WebSocket('ws://' + hostname + '/api/chat/ws');
+    const ws = new WebSocket('ws://' + hostname + '/api/chat/send_message?channel={{ channel_id }}&server={{ server_address }}');
 
     ws.onopen = () => {
         console.log('WebSocket opened on browser');
