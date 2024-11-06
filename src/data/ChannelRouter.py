@@ -1,3 +1,3 @@
 from fastapi import APIRouter
 
-ServerRouter = APIRouter()
+ChannelRouter = APIRouter()

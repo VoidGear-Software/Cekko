@@ -1,17 +1,17 @@
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Optional
+from typing import Optional
 
 import jwt
-from fastapi import Depends, Request, WebSocket
+from fastapi import Request, WebSocket
 from fastapi.params import Header
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from jwt import ExpiredSignatureError
 
-from .crud import get_user_by_username
+from .crud import read_user_by_username
 from .model import User
-from ...logger import loggerObj
+from ...logger import logger
 
 SECRET_KEY = os.getenv("JWTSTRAT", "fallback-secret")
 ALGORITHM = "HS256"
@@ -37,44 +37,40 @@ async def get_current_user(request: Request = None, websocket: WebSocket = None,
 
     if request is None:
         request = websocket
-        
+
     if hasattr(request, 'session'):
         token = request.session.get('access_token')
-        loggerObj.debug(f"Token from session: {token}")
+        logger.debug(f"Token from session: {token}")
 
     if not token and authorization:
         scheme, _, token = authorization.partition(' ')
         if scheme.lower() != 'bearer':
-            loggerObj.warning(f"Invalid authorization scheme: {scheme}")
+            logger.warning(f"Invalid authorization scheme: {scheme}")
             return None
-        loggerObj.debug(f"Token from Authorization header: {token}")
+        logger.debug(f"Token from Authorization header: {token}")
 
     if not token:
-        loggerObj.warning("No token found in session or Authorization header")
+        logger.warning("No token found in session or Authorization header")
         return None
     try:
-        loggerObj.debug(f"Attempting to decode token: {token}")
+        logger.debug(f"Attempting to decode token: {token}")
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         except ExpiredSignatureError:
-            loggerObj.error(f"Token expired")
+            logger.error(f"Token expired")
             return None
         username: str = payload.get("sub")
         if username is None:
-            loggerObj.warning("No username found in token payload")
+            logger.warning("No username found in token payload")
             return None
-        loggerObj.debug(f"Username from token: {username}")
+        logger.debug(f"Username from token: {username}")
     except JWTError as e:
-        loggerObj.error(f"Error decoding token: {str(e)}")
+        logger.error(f"Error decoding token: {str(e)}")
         return None
 
-    user = await get_user_by_username(username=username)
+    user = await read_user_by_username(username=username)
     if user is None:
-        loggerObj.warning(f"No user found for username: {username}")
+        logger.warning(f"No user found for username: {username}")
     else:
-        loggerObj.debug(f"User found: {user}")
+        logger.debug(f"User found: {user}")
     return user
-
-
-async def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
-    return current_user

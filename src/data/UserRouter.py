@@ -1,13 +1,13 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Form, status
-from fastapi.params import Depends, Query
+from fastapi import APIRouter, HTTPException, Form
+from fastapi.params import Query
 from fastapi.requests import Request
 from fastapi.responses import RedirectResponse
 
-from .crud import authenticate_user, create_user
-from .jwt import create_access_token, get_current_user
-from .schema import UserCreate, User, Token
+from .User.crud import authenticate_user, create_user
+from .User.jwt import create_access_token
+from .User.schema import UserCreate, Token
 
 UserRouter = APIRouter()
 
@@ -15,8 +15,8 @@ UserRouter = APIRouter()
 @UserRouter.post("/register")
 async def auth_register(request: Request,
                         username: Annotated[str, Form()],
-                        password: Annotated[str, Form()],
                         email: Annotated[str, Form()],
+                        password: Annotated[str, Form()],
                         next: Annotated[str, Query] = "/"):
     db_user = await create_user(UserCreate(username=username, password=password, email=email))
     if db_user is True:
@@ -45,8 +45,9 @@ async def auth_login(request: Request,
 
 @UserRouter.post("/register/jwt", response_model=Token)
 async def auth_register_jwt(username: Annotated[str, Form()],
-                            password: Annotated[str, Form()],
-                            email: Annotated[str, Form()]):
+                            email: Annotated[str, Form()],
+                            password: Annotated[str, Form()]
+                            ):
     db_user = await create_user(UserCreate(username=username, password=password, email=email))
     if db_user:
         access_token = create_access_token(data={"sub": db_user.username})
@@ -62,19 +63,3 @@ async def auth_login_jwt(username: Annotated[str, Form()],
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
-
-
-@UserRouter.get("/me", response_model=User)
-async def read_users_me(request: Request, current_user: User = Depends(get_current_user)):
-    if current_user is None:
-        if 'Authorization' in request.headers:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token"
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Missing Authorization header"
-            )
-    return current_user

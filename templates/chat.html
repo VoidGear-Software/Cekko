@@ -1,45 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>WebSocket Example</title>
-</head>
+<html lang="">
+<header>
+
+</header>
 <body>
-<h1>WebSocket Example</h1>
 <div>
-    <input type="text" id="messageInput" placeholder="Type a message">
+    <h1>Long Polling Chat with SQLAlchemy</h1>
+    <label for="message">Message: </label>
+    <input id="message" type="text" placeholder="Type a message..."/>
     <button onclick="sendMessage()">Send</button>
+    <div id="messages"></div>
 </div>
-<div id="output"></div>
-
 <script>
-    let hostname = window.location.hostname
-    let outputDiv = document.getElementById("output");
-    let messageInput = document.getElementById("messageInput");
-
-    const ws = new WebSocket('ws://' + hostname + '/api/chat/send_message?channel={{ channel_id }}&server={{ server_address }}');
-
-    ws.onopen = () => {
-        console.log('WebSocket opened on browser');
+    async function poll() {
+        const response = await fetch('/poll/');
+        const data = await response.json();
+        const messagesDiv = document.getElementById("messages");
+        messagesDiv.innerHTML += '<p> <br>' + data.messages.join('<br>');
+        await poll();
     }
-
-    ws.onclose = () => {
-        console.log('WebSocket closed');
-    }
-
-    ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-    }
-
-    ws.onmessage = function (event) {
-        outputDiv.innerHTML += `<p> ${event.data} </p>`;
-        console.log(event.data);
-    };
 
     function sendMessage() {
-        const message = messageInput.value;
-        ws.send(message);
-        messageInput.value = "";
+        const messageInput = document.getElementById("message");
+        fetch('/send/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({message: messageInput.value}),
+        });
+        messageInput.value = '';
     }
+
+    poll(); // Start the initial poll
 </script>
 </body>
 </html>

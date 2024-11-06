@@ -1,1 +1,1 @@
-from .router import MessageRouter
+from .model import Message

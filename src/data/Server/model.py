@@ -7,11 +7,23 @@ from ..Base import Base
 class Server(Base):
     __tablename__ = "servers"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, default=1)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(index=True, nullable=False)
-    invites: Mapped[list[str]] = mapped_column(index=True)
+
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    owner: Mapped["User"] = relationship("User", back_populates="owned_servers", foreign_keys=[owner_id])
+    owner: Mapped["User"] = relationship(
+        "User",
+        back_populates="owned_servers"
+    )
+
+    invites: Mapped[list["Invite"]] = relationship(
+        "Invite",
+        back_populates="server",
+    )
+    channels: Mapped[list["Channel"]] = relationship(
+        "Channel",
+        back_populates="server"
+    )
     members: Mapped[list["User"]] = relationship(
         "User",
         secondary="server_members",

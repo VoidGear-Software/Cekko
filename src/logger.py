@@ -8,4 +8,4 @@ class Logger(logging.LoggerAdapter):
         super().__init__(logger, extra)
 
 
-loggerObj = Logger(logger=logging.getLogger(__name__))
+logger = Logger(logger=logging.getLogger(__name__))
