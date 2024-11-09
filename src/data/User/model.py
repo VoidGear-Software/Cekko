@@ -14,17 +14,20 @@ class User(Base):
 
     owned_servers: Mapped[list["Server"]] = relationship(
         "Server",
-        back_populates="owner"
+        back_populates="owner",
+        cascade="all, delete-orphan"
     )
     joined_servers: Mapped[list["Server"]] = relationship(
         "Server",
         secondary="server_members",
-        back_populates="members"
+        back_populates="members",
+        cascade="all, delete"
     )
     messages: Mapped[list["Message"]] = relationship(
         "Message",
         back_populates="author",
-        foreign_keys="[Message.author_id]"
+        foreign_keys="[Message.author_id]",
+        cascade="all, delete-orphan"
     )
 
 

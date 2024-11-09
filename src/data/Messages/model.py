@@ -11,7 +11,7 @@ class Message(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     content: Mapped[str] = mapped_column(nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
 
     answered_id: Mapped[int] = mapped_column(ForeignKey("messages.id"), nullable=True)
     answered: Mapped["Message"] = relationship("Message", foreign_keys=[answered_id])

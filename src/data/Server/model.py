@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import ForeignKey, Table, Column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,24 +18,27 @@ class Server(Base):
         back_populates="owned_servers"
     )
 
-    invites: Mapped[list["Invite"]] = relationship(
+    invites: Mapped[List["Invite"]] = relationship(
         "Invite",
         back_populates="server",
+        cascade="all, delete-orphan"
     )
-    channels: Mapped[list["Channel"]] = relationship(
+    channels: Mapped[List["Channel"]] = relationship(
         "Channel",
-        back_populates="server"
+        back_populates="server",
+        cascade="all, delete-orphan"
     )
-    members: Mapped[list["User"]] = relationship(
+    members: Mapped[List["User"]] = relationship(
         "User",
         secondary="server_members",
-        back_populates="joined_servers"
+        back_populates="joined_servers",
+        cascade="all, delete"
     )
 
 
 server_members = Table(
     "server_members",
     Base.metadata,
-    Column("server_id", ForeignKey("servers.id"), primary_key=True),
-    Column("user_id", ForeignKey("users.id"), primary_key=True),
+    Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("server_id", ForeignKey("servers.id", ondelete="CASCADE"), primary_key=True)
 )

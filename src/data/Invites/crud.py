@@ -1,79 +1,112 @@
-import datetime
-from datetime import datetime as datetime_
+from datetime import datetime, timedelta
+from typing import Optional
 
-from sqlalchemy import insert, select, delete, update
+from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from .model import Invite
 from ..Base import engine
-from ..Server import Server
+from ..Server.model import Server
 from ...logger import logger
 
 
-async def create_invite(creator_id: int, server_id: int, uses: int = -1, duration: datetime = None) -> Invite:
-    async with engine.connect() as conn:
-        query = insert(Invite).values(creator_id=creator_id, server_id=server_id, uses=uses, duration=duration)
-        await conn.execute(query)
-        query = select(Invite).where(
-            Invite.creator_id == creator_id,
-            Invite.server_id == server_id,
-            Invite.uses == uses,
-            Invite.duration == duration
-        )
-        result = await conn.execute(query)
-        invite = await result.fetchone()
-        logger.debug(f"Created Invite {invite} with link {invite.link}")
-        return invite
+async def create_invite(creator_id: int, server_id: int, uses: int = -1,
+                        duration: Optional[timedelta] = None) -> Invite:
+    async with AsyncSession(engine) as session:
+        expire_at = datetime.now() + (duration or timedelta(weeks=1))
+
+        try:
+            new_invite = Invite(
+                creator_id=creator_id,
+                server_id=server_id,
+                uses=uses,
+                expire_at=expire_at
+            )
+            session.add(new_invite)
+            await session.flush()
+
+            query = (
+                select(Invite)
+                .where(Invite.id == new_invite.id)
+                .options(
+                    selectinload(Invite.server),
+                    selectinload(Invite.creator)
+                )
+            )
+            result = await session.execute(query)
+            loaded_invite = result.scalar_one()
+
+            logger.debug(f"Created Invite {loaded_invite.id} for Server {server_id}")
+            return loaded_invite
+        except SQLAlchemyError as e:
+            logger.warning(f"Error creating invite: {str(e)}")
+            raise
 
 
 async def read_invite_by_id(invite_id: int) -> Invite:
-    async with engine.connect() as conn:
-        query = select(Invite).where(Invite.id == invite_id)
-        result = await conn.execute(query)
-        return await result.fetchone()
+    async with AsyncSession(engine) as session:
+        query = select(Invite).where(Invite.id == invite_id).options(
+            selectinload(Invite.server),
+            selectinload(Invite.creator),
+        )
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
 
 
 async def read_invite_by_link(link: str) -> Invite:
-    async with engine.connect() as conn:
-        query = select(Invite).where(Invite.link == link)
-        result = await conn.execute(query)
-        return await result.fetchone()
+    async with AsyncSession(engine) as session:
+        query = select(Invite).where(Invite.link == link).options(
+            selectinload(Invite.server),
+            selectinload(Invite.creator),
+        )
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
 
 
-async def use_invite(link: str) -> Server:
+async def use_invite(link: str) -> Server | None:
     invite = await read_invite_by_link(link)
-    if _Validation.is_link_valid(link):
-        async with engine.connect() as conn:
-            query = update(Invite).where(Invite.link == link).values(uses=(invite.uses - 1))
-            result = await conn.execute(query)
-            invite = await result.fetchone()
+    if not invite or not await _Validation.is_link_valid(invite):
+        return None
 
-            if invite.uses is 0:
-                await delete_invite(invite_id=invite.id)
-                logger.debug(f"Deleted Invite {invite} | Reason: Invite expired")
+    async with AsyncSession(engine) as session:
+        invite.uses -= 1
+        if invite.uses == 0:
+            await session.delete(invite)
+            logger.debug(f"Deleted Invite {invite} | Reason: All uses exhausted")
+        else:
+            await session.merge(invite)
 
-            query = select(Server).where(Server.id == invite.server_id)
-            result = await conn.execute(query)
-            logger.debug(f"Created Invite {invite}")
-            return await result.fetchone()
+        query = select(Server).where(Server.id == invite.server_id)
+        result = await session.execute(query)
+        server = result.scalar_one_or_none()
+
+        await session.commit()
+        logger.debug(f"Used Invite {invite}")
+        return server
 
 
 async def delete_invite(invite_id: int) -> None:
-    async with engine.connect() as conn:
-        query = delete(Invite).where(Invite.id == invite_id)
-        await conn.execute(query)
+    async with AsyncSession(engine) as session:
+        invite = await session.get(Invite, invite_id)
+        if invite:
+            await session.delete(invite)
+            await session.commit()
+            logger.debug(f"Deleted Invite {invite}")
+        else:
+            logger.warning(f"Attempted to delete non-existent invite with id {invite_id}")
 
 
 class _Validation:
-
     @staticmethod
-    async def is_link_valid(link: str) -> bool:
-        invite = await read_invite_by_link(link)
-        if invite.duration >= datetime_.now():
-            await delete_invite(invite_id=invite.id)
+    async def is_link_valid(invite: Invite) -> bool:
+        if invite.expire_at and invite.expire_at <= datetime.utcnow():
+            await delete_invite(invite.id)
             logger.debug(f"Deleted Invite {invite} | Reason: Invite expired")
             return False
-        if invite.uses is 0:
-            await delete_invite(invite_id=invite.id)
-            logger.debug(f"Deleted Invite {invite} | Reason: Invite used")
+        if invite.uses == 0:
+            await delete_invite(invite.id)
+            logger.debug(f"Deleted Invite {invite} | Reason: No uses left")
             return False
         return True

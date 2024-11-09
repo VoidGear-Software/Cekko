@@ -1,10 +1,8 @@
 import os
 from contextlib import asynccontextmanager
-from http.client import HTTPException
 
 from fastapi import FastAPI
 from ratelimit import RateLimitMiddleware, Rule
-from ratelimit.auths import EmptyInformation
 from ratelimit.backends.simple import MemoryBackend
 from ratelimit.types import Scope, Receive, Send
 from starlette.middleware.cors import CORSMiddleware
@@ -14,7 +12,6 @@ from starlette.responses import RedirectResponse
 from starlette.staticfiles import StaticFiles
 
 from .data import DataAPI, create_db_and_tables
-from .data.User.jwt import get_current_user
 from .view import ViewApp
 
 
@@ -48,6 +45,7 @@ def blocked_page(retry_after: int):
 
 async def ratelimit_auth(scope: Scope) -> [str, str]:
     return 0, "default"
+
 
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET"))
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"],

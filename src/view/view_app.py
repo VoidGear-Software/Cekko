@@ -5,8 +5,8 @@ from fastapi.params import Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from src.data.schemas import UserResponse
 from ..data.User.jwt import get_current_user
-from ..data.User.schema import User
 
 ViewApp = APIRouter()
 
@@ -14,7 +14,8 @@ templates = Jinja2Templates(directory="templates")
 
 
 @ViewApp.get("/", response_class=HTMLResponse)
-async def index(request: Request, current_user: User = Depends(get_current_user)):
+@ViewApp.post("/", response_class=HTMLResponse, include_in_schema=False)
+async def index(request: Request, current_user: UserResponse = Depends(get_current_user)):
     ctx = {
         "request": request,
         "user": current_user
@@ -25,6 +26,7 @@ async def index(request: Request, current_user: User = Depends(get_current_user)
 
 
 @ViewApp.get("/login", response_class=HTMLResponse)
+@ViewApp.post("/login", response_class=HTMLResponse, include_in_schema=False)
 async def view_login(request: Request, next: Annotated[str, Query] = "/"):
     ctx = {
         "request": request,
@@ -35,6 +37,7 @@ async def view_login(request: Request, next: Annotated[str, Query] = "/"):
 
 
 @ViewApp.get("/register", response_class=HTMLResponse)
+@ViewApp.post("/register", response_class=HTMLResponse, include_in_schema=False)
 async def view_register(request: Request, next: Annotated[str, Query] = "/"):
     ctx = {
         "request": request,
@@ -50,8 +53,9 @@ async def view_logout(request: Request):
     return RedirectResponse(url="/", status_code=303)
 
 
-@ViewApp.get("/chat")
-async def view_chat(request: Request, current_user: User = Depends(get_current_user)):
+@ViewApp.get("/chat", response_class=HTMLResponse)
+@ViewApp.post("/chat", response_class=HTMLResponse, include_in_schema=False)
+async def view_chat(request: Request, current_user: UserResponse = Depends(get_current_user)):
     ctx = {
         "request": request,
         "user": current_user

@@ -6,32 +6,69 @@
 <div>
     <h1>Long Polling Chat with SQLAlchemy</h1>
     <label for="message">Message: </label>
-    <input id="message" type="text" placeholder="Type a message..."/>
-    <button onclick="sendMessage()">Send</button>
     <div id="messages"></div>
 </div>
 <script>
-    async function poll() {
-        const response = await fetch('/poll/');
-        const data = await response.json();
-        const messagesDiv = document.getElementById("messages");
-        messagesDiv.innerHTML += '<p> <br>' + data.messages.join('<br>');
-        await poll();
-    }
-
-    function sendMessage() {
-        const messageInput = document.getElementById("message");
-        fetch('/send/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
+    let urlParams;
+    (window.onpopstate = function () {
+        let match,
+            pl = /\+/g,
+            search = /([^&=]+)=?([^&]*)/g,
+            decode = function (s) {
+                return decodeURIComponent(s.replace(pl, " "));
             },
-            body: JSON.stringify({message: messageInput.value}),
-        });
-        messageInput.value = '';
+            query = window.location.search.substring(1);
+
+        urlParams = {};
+        while (match = search.exec(query))
+            urlParams[decode(match[1])] = decode(match[2]);
+    })();
+
+    let eventSource;
+    const currentDMUserId = urlParams["userId"];
+    const currentChannelId = urlParams["channelId"];
+
+    function connectToMessageStream() {
+        eventSource = new EventSource('api/message/stream');
+        eventSource.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            if (data.type === 'channel_message') {
+                handleChannelMessage(data.channel_id, data.message);
+            } else if (data.type === 'dm_message') {
+                handleDMMessage(data.author_id, data.message);
+            }
+        };
     }
 
-    poll(); // Start the initial poll
+    function handleChannelMessage(channelId, message) {
+        if (currentChannelId === channelId) {
+            displayMessage(message);
+        } else {
+            showNotification('New channel message', message.content);
+        }
+    }
+
+    function handleDMMessage(author_id, message) {
+        if (currentDMUserId === author_id) {
+            displayMessage(message);
+        } else {
+            showNotification('New DM', message.content);
+        }
+    }
+
+    function displayMessage(message) {
+        console.log('New message:', message);
+        document.getElementById('messages').innerHTML += "<br>" + message.content;
+    }
+
+    function showNotification(title, body) {
+        if (Notification.permission === "granted") {
+            new Notification(title, {body: body});
+        }
+    }
+
+    // Connect to the message stream when the user logs in
+    connectToMessageStream();
 </script>
 </body>
 </html>

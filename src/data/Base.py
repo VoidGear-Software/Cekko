@@ -3,7 +3,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 Base = declarative_base()
 
-engine = create_async_engine("sqlite+aiosqlite:///database.db", connect_args={"check_same_thread": False})
+engine = create_async_engine("sqlite+aiosqlite:///database.db",
+                             connect_args={"check_same_thread": False, "autocommit": True})
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

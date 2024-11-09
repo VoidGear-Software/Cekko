@@ -16,7 +16,7 @@
         Login
     </h2>
     <div x-show="showLogin">
-        <form action="{{ url_for('auth_login') }}" method="post" class="space-y-6">
+        <form action="{{ url_for('login_api') }}" method="post" class="space-y-6">
             <div>
                 <label for="username_login" class="block text-lg font-medium text-gray-700 mb-2">Username</label>
                 <input type="text" id="username_login" name="username" required
@@ -27,6 +27,11 @@
                 <input type="password" id="password_login" name="password" required
                        class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-lg">
             </div>
+            {% if request.cookies.get('login_error') %}
+                <div class="error-message">
+                    {{ request.cookies.get('login_error') }}
+                </div>
+            {% endif %}
             <div>
                 <button type="submit"
                         class="w-full py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500">
@@ -36,14 +41,20 @@
         </form>
     </div>
     <div x-show="!showLogin">
-        <form action="{{ url_for('auth_register') }}" method="post" class="space-y-6">
+        <form action="{{ url_for('register_api') }}" method="post" class="space-y-6">
             <div>
                 <label for="username_register" class="block text-lg font-medium text-gray-700 mb-2">Username</label>
+                {% if request.cookies.get('register_error_username') %}
+                    <div class="error-message"> {{ request.cookies.get('register_error_username') }} </div>
+                {% endif %}
                 <input type="text" id="username_register" name="username" required
                        class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-lg">
             </div>
             <div>
                 <label for="email" class="block text-lg font-medium text-gray-700 mb-2">Email</label>
+                {% if request.cookies.get('register_error_email') %}
+                    <div class="error-message"> {{ request.cookies.get('register_error_email') }} </div>
+                {% endif %}
                 <input type="email" id="email" name="email" required
                        class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-lg">
             </div>
@@ -70,6 +81,9 @@
             Need an account? Register
         </a>
     </div>
+    <script>
+        document.cookie = "login_error=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    </script>
 </div>
 </body>
 </html>

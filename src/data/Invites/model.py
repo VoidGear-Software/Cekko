@@ -17,10 +17,10 @@ def _generate_random_string(length=8):
 class Invite(Base):
     __tablename__ = "invites"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, default=1)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     link: Mapped[str] = mapped_column(index=True, nullable=False, default=_generate_random_string(9))
     uses: Mapped[int] = mapped_column(nullable=False, default=-1)
-    duration: Mapped[datetime] = mapped_column(DateTime, default=datetime.now() + timedelta(weeks=1))
+    expire_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now() + timedelta(weeks=1))
 
     creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     creator: Mapped["User"] = relationship("User", foreign_keys=[creator_id])
