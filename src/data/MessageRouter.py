@@ -107,16 +107,25 @@ async def send_message_dm_api(content: str, recipient_id: int, answered_id: int 
         message = await create_message(content=content, author_id=user.id, answered_id=answered_id,
                                        recipient_id=recipient.id)
 
+        # Create a MessageResponse object
+        message_response = MessageResponse(
+            id=message.id,
+            content=message.content,
+            timestamp=message.timestamp,
+            author=UserResponse(id=message.author.id, username=message.author.username),
+            answered_id=message.answered_id
+        )
+
         for user_id in [user.id, recipient_id]:
             if user_id in user_connections:
                 for queue in user_connections[user_id]:
                     await queue.put({
                         "type": "dm_message",
                         "other_user_id": user.id if user_id == recipient_id else recipient_id,
-                        "message": jsonable_encoder(message)
+                        "message": jsonable_encoder(message_response)
                     })
 
-        return JSONResponse(jsonable_encoder(message), status_code=status.HTTP_200_OK)
+        return JSONResponse(jsonable_encoder(message_response), status_code=status.HTTP_200_OK)
     except Exception as e:
         logger.error(f"Error creating message: {str(e)}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipient not found")
@@ -133,6 +142,15 @@ async def send_message_ch_api(content: str, channel_id: int, answered_id: int = 
         message = await create_message(content=content, author_id=user.id, answered_id=answered_id,
                                        channel_id=channel_id)
 
+        # Create a MessageResponse object
+        message_response = MessageResponse(
+            id=message.id,
+            content=message.content,
+            timestamp=message.timestamp,
+            author=UserResponse(id=message.author.id, username=message.author.username),
+            answered_id=message.answered_id
+        )
+
         # Notify all users in the channel
         for member in server.members:
             if member.id in user_connections:
@@ -140,8 +158,10 @@ async def send_message_ch_api(content: str, channel_id: int, answered_id: int = 
                     await queue.put({
                         "type": "channel_message",
                         "channel_id": channel_id,
-                        "message": jsonable_encoder(message)
+                        "message": jsonable_encoder(message_response)
                     })
+
+        return JSONResponse(jsonable_encoder(message_response), status_code=status.HTTP_200_OK)
     except Exception as e:
         logger.error(f"{str(e)}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Channel not found")

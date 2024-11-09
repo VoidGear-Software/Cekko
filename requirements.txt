@@ -10,7 +10,7 @@ pyjwt~=2.9.0
 passlib[bcrypt]~=1.7.4
 bcrypt==4.0.1
 httpx~=0.27.2
-python-jose~=3.3.0
-asgi-ratelimit[full]~=0.10.0
+python-jose~=2.0.0
+asgi-ratelimit[jwt]~=0.10.0
 itsdangerous~=2.2.0
 pytest~=8.3.3
